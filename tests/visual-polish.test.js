@@ -19,7 +19,7 @@ test('visual polish keeps AKUMO palette and touch targets', () => {
   assert.match(css, /\.rack-scene\.is-iso/);
   assert.match(css, /\.rack-scene\.is-flat/);
   assert.match(css, /min-width:\s*1280px|width:\s*min\(1280px/);
-  assert.match(html, /css\/app\.css\?v=20261106-header2/);
+  assert.match(html, /css\/app\.css\?v=20261106-layout2/);
   assert.match(html, /<h1 class="wordmark">AKUMO <span class="wordmark-accent">RADAR<\/span><\/h1>/);
   assert.match(html, /id="data-status"/);
   assert.match(html, /class="status-meta"/);

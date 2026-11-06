@@ -23,7 +23,7 @@ test('static scanner UI is labelled beta (buttons, dialog, aria)', () => {
   assert.match(html, /placeholder="název, EAN nebo šuplík"/);
   assert.match(html, /<h1 class="wordmark">AKUMO <span class="wordmark-accent">RADAR<\/span><\/h1>/);
   assert.match(html, /js\/scanner\.js\?v=20261106-scanbeta1/);
-  assert.match(html, /js\/app\.js\?v=20261106-scanbeta1/);
+  assert.match(html, /js\/app\.js\?v=20261106-layout2/);
 });
 
 test('dynamic scanner status messages are prefixed with beta', async () => {

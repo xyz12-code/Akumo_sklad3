@@ -118,5 +118,24 @@
       .filter(Boolean);
   }
 
-  return { search, rankPart, uniqueDrawers };
+  /**
+   * Truthful summary of the whole current result (not just visible cards):
+   * parts = number of matched parts; drawerCodes = unique real drawer codes
+   * that hold a matched part OR whose own label matched the query.
+   * Parts without a drawer ('OSTATNÍ' / empty) are not counted as a drawer.
+   */
+  function summarizeMatch(matched) {
+    const partsList = (matched && Array.isArray(matched.parts)) ? matched.parts : [];
+    const drawerList = (matched && Array.isArray(matched.drawers)) ? matched.drawers : [];
+    const codes = new Set();
+    const add = (code) => {
+      const value = String(code || '').trim().toUpperCase();
+      if (value && value !== 'OSTATNÍ') codes.add(value);
+    };
+    partsList.forEach((p) => add(p && p.drawer));
+    drawerList.forEach((d) => add(d && d.code));
+    return { partCount: partsList.length, drawerCount: codes.size, drawerCodes: codes };
+  }
+
+  return { search, rankPart, uniqueDrawers, summarizeMatch };
 });

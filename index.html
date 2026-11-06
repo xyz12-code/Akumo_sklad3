@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#7db828">
+  <meta name="theme-color" content="#121416">
   <meta name="description" content="AKUMO RADAR – rychlé hledání dílů, sken čárových kódů (beta) a schematická mapa šuplíků.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="AKUMO RADAR">
   <title>AKUMO RADAR</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/app.css?v=20261106-header2">
+  <link rel="stylesheet" href="css/app.css?v=20261106-layout2">
 </head>
 <body>
   <a class="skip-link" href="#search-input">Přeskočit na hledání</a>
@@ -39,40 +39,51 @@
     </header>
 
     <div class="layout" id="main-layout">
-      <section class="panel panel-results" id="results-panel" aria-labelledby="results-title">
-        <div class="panel-head">
-          <h2 id="results-title">Výsledky</h2>
-          <span id="result-count" class="muted">—</span>
-        </div>
-        <div class="chip-block">
-          <p class="eyebrow">Naposledy</p>
-          <div id="history" class="chip-row" aria-live="polite"></div>
-        </div>
-        <div class="chip-block">
-          <p class="eyebrow">Oblíbené</p>
-          <div id="favorites" class="chip-row" aria-live="polite"></div>
-        </div>
-        <div id="quick-answer" hidden></div>
-        <div id="results" class="results" aria-live="polite"></div>
-      </section>
+      <div class="results-col">
+        <div id="quick-answer" class="quick-answer" hidden></div>
 
-      <section class="panel panel-map" id="map-panel" aria-labelledby="map-title">
-        <div class="panel-head">
+        <div class="view-tabs" id="view-tabs" role="tablist" aria-label="Zobrazení">
+          <button type="button" class="view-tab" id="tab-results" role="tab" aria-selected="true" aria-controls="results-panel">Výsledky</button>
+          <button type="button" class="view-tab" id="tab-map" role="tab" aria-selected="false" aria-controls="map-panel" tabindex="-1">Mapa</button>
+        </div>
+
+        <section class="panel panel-results" id="results-panel" role="tabpanel" aria-labelledby="results-title">
+          <div class="panel-head">
+            <h2 id="results-title">Výsledky</h2>
+            <span id="result-count" class="muted">—</span>
+          </div>
+          <div id="results" class="results" aria-live="polite"></div>
+          <div class="recent-block">
+            <div class="chip-block">
+              <p class="eyebrow">Naposledy</p>
+              <div id="history" class="chip-row" aria-live="polite"></div>
+            </div>
+            <div class="chip-block">
+              <p class="eyebrow">Oblíbené</p>
+              <div id="favorites" class="chip-row" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel panel-map" id="map-panel" role="tabpanel" aria-labelledby="map-title">
+        <div class="panel-head map-head">
           <h2 id="map-title">Regálové průčelí</h2>
           <div class="mode-switch" role="group" aria-label="Režim zobrazení">
-            <button type="button" class="mode-btn" id="mode-iso" aria-pressed="true">3D</button>
             <button type="button" class="mode-btn" id="mode-flat" aria-pressed="false">2D</button>
+            <button type="button" class="mode-btn" id="mode-iso" aria-pressed="true">3D</button>
           </div>
         </div>
-        <p id="map-note" class="map-note">Sloupce zleva, čísla shora dolů – orientační pohled.</p>
-        <nav id="wall-tabs" class="wall-tabs" aria-label="Blok regálu"></nav>
+        <div class="map-subhead">
+          <nav id="wall-tabs" class="wall-tabs" aria-label="Blok regálu"></nav>
+          <p id="map-note" class="map-note">Sloupce zleva, čísla shora dolů – orientační pohled.</p>
+        </div>
         <div class="map-toolbar">
           <strong id="section-label">Regál —</strong>
           <span class="muted map-hint">Sloupce A→ · řady shora dolů · zeleně = cíl</span>
         </div>
         <nav id="section-nav" class="section-nav" aria-label="Sekce ve stěně"></nav>
         <div class="scene facade-scene" aria-label="Schematické regálové průčelí">
-          <div class="scene-label"><span>AKUMO RADAR</span><span>SCHÉMA</span></div>
           <div id="drawer-grid" class="drawer-grid rack-facade is-iso" aria-label="Průčelí zvoleného regálu"></div>
         </div>
         <div id="drawer-detail" class="drawer-detail" aria-live="polite">
@@ -85,13 +96,13 @@
 
   <nav class="mobile-dock" id="mobile-dock" aria-label="Rychlé akce">
     <button type="button" class="dock-btn" id="dock-search" data-target="search">
-      <span class="dock-ico" aria-hidden="true">⌕</span><span>Hledat</span>
+      <svg class="dock-ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span>Hledat</span>
     </button>
     <button type="button" class="dock-btn dock-primary" id="dock-scan">
-      <span class="dock-ico" aria-hidden="true">▦</span><span>Skenovat (beta)</span>
+      <svg class="dock-ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5v14M7.5 5v14M11 5v14M14 5v14M17 5v14M20 5v14" stroke-width="1.6"/><path d="M7.5 5v14M14 5v14" stroke-width="2.6"/></svg><span>Skenovat (beta)</span>
     </button>
     <button type="button" class="dock-btn" id="dock-map" data-target="map">
-      <span class="dock-ico" aria-hidden="true">▣</span><span>Mapa</span>
+      <svg class="dock-ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></svg><span>Mapa</span>
     </button>
   </nav>
 
@@ -123,7 +134,7 @@
   </style>
 
   <script src="js/normalize.js?v=20261106-release1"></script>
-  <script src="js/search.js?v=20261106-release1"></script>
+  <script src="js/search.js?v=20261106-layout2"></script>
   <script src="js/storage.js?v=20261106-release1"></script>
   <script src="js/data.js?v=20261106-release1"></script>
   <script src="js/warehouse.js?v=20261106-release1"></script>
@@ -131,6 +142,6 @@
   <script src="js/scanner.js?v=20261106-scanbeta1"></script>
   <script src="js/supabase-config.js?v=20261106-release1"></script>
   <script src="js/history-log.js?v=20261106-release1"></script>
-  <script src="js/app.js?v=20261106-scanbeta1"></script>
+  <script src="js/app.js?v=20261106-layout2"></script>
 </body>
 </html>
