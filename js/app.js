@@ -5,7 +5,8 @@
   const { search } = AkumoSearch;
   const { sectionOf, formatCountLabel, formatItemsLabel } = AkumoNormalize;
   const { getHistory, rememberQuery, getFavorites, toggleFavorite, isFavorite } = AkumoStorage;
-  const { renderSectionNav, renderRack, pulseDrawer, reducedMotion } = AkumoMap;
+  const { buildWarehouse, routeToCode } = AkumoWarehouse;
+  const { renderWallTabs, renderSectionNav, renderRack, pulseDrawer, panToDrawer, reducedMotion } = AkumoMap;
   const { createScannerController, createZXingLoader } = AkumoScanner;
 
   const els = {
@@ -18,6 +19,7 @@
     quick: document.getElementById('quick-answer'),
     history: document.getElementById('history'),
     favorites: document.getElementById('favorites'),
+    wallTabs: document.getElementById('wall-tabs'),
     sectionNav: document.getElementById('section-nav'),
     grid: document.getElementById('drawer-grid'),
     sectionLabel: document.getElementById('section-label'),
@@ -45,8 +47,10 @@
   let drawers = [];
   let parts = [];
   let sections = [];
+  let warehouse = null;
   let query = '';
   let matched = { type: 'empty', drawers: [], parts: [], focusDrawer: null };
+  let activeWallId = 'ag';
   let activeSection = 'A';
   let selectedDrawer = null;
   let selectedPartCode = null;
@@ -128,24 +132,43 @@
     return counts;
   }
 
+  function currentWallModel() {
+    if (!warehouse) return null;
+    return warehouse.walls.find((w) => w.id === activeWallId) || warehouse.walls[0];
+  }
+
   function paintMap(force) {
+    if (!warehouse) return;
+    const wall = currentWallModel();
     const codes = query ? [...matchCodes()].sort().join(',') : '';
-    const key = [activeSection, mapMode, selectedDrawer || '', codes].join('|');
+    const key = [activeWallId, activeSection, mapMode, selectedDrawer || '', codes].join('|');
     if (!force && key === lastPaintKey) return;
     lastPaintKey = key;
 
-    els.sectionLabel.textContent = 'Sekce ' + activeSection;
-    renderSectionNav(els.sectionNav, sections, activeSection, sectionCounts(), (name) => {
-      activeSection = name;
+    els.sectionLabel.textContent = wall.title;
+    renderWallTabs(els.wallTabs, warehouse.walls, activeWallId, (wallId) => {
+      activeWallId = wallId;
+      const next = warehouse.walls.find((w) => w.id === wallId);
+      if (next && next.sections.length) activeSection = next.sections[0];
       paintMap(true);
     });
+
+    const wallSections = wall.sections;
+    const counts = sectionCounts();
+    renderSectionNav(els.sectionNav, wallSections, activeSection, counts, (name) => {
+      activeSection = name;
+      const col = els.grid.querySelector('.rack-column[data-section="' + name + '"]');
+      if (col) col.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
+      paintMap(true);
+    });
+
     renderRack({
       gridEl: els.grid,
-      drawers,
-      section: activeSection,
+      wallModel: wall,
       mode: mapMode,
       matchCodes: query ? matchCodes() : new Set(),
       selectedCode: selectedDrawer,
+      focusSection: activeSection,
       contentsCount: (code) => partsInDrawer(code).length,
       onSelect: (code) => selectDrawer(code, true),
     });
@@ -157,8 +180,14 @@
       const part = parts.find((item) => item.code === selectedPartCode);
       if (!part || part.drawer !== code) selectedPartCode = null;
     }
-    const section = sectionOf(code);
-    if (section) activeSection = section;
+    if (warehouse) {
+      const route = routeToCode(warehouse, code);
+      activeWallId = route.wallId;
+      if (route.section) activeSection = route.section;
+    } else {
+      const section = sectionOf(code);
+      if (section) activeSection = section;
+    }
     updateResultCount();
     paintMap(true);
     renderDetail(code);
@@ -168,13 +197,9 @@
     if (!fromMap || window.matchMedia('(max-width: 920px)').matches) {
       window.scrollTo({ top: Math.max(0, top), behavior });
     }
-    pulseDrawer(els.grid, code);
-    // Keep selected drawer in view above dock
     requestAnimationFrame(() => {
-      const btn = els.grid.querySelector('.drawer.is-open');
-      if (btn && typeof btn.scrollIntoView === 'function') {
-        btn.scrollIntoView({ block: 'center', inline: 'nearest', behavior });
-      }
+      panToDrawer(els.grid, code);
+      pulseDrawer(els.grid, code);
     });
   }
 
@@ -292,9 +317,15 @@
     renderResults();
 
     if (matched.focusDrawer) {
-      const section = sectionOf(matched.focusDrawer);
-      if (section) activeSection = section;
       selectedDrawer = matched.focusDrawer;
+      if (warehouse) {
+        const route = routeToCode(warehouse, matched.focusDrawer);
+        activeWallId = route.wallId;
+        if (route.section) activeSection = route.section;
+      } else {
+        const section = sectionOf(matched.focusDrawer);
+        if (section) activeSection = section;
+      }
     } else if (!query) {
       selectedDrawer = null;
     }
@@ -605,10 +636,12 @@
       drawers = data.drawers;
       parts = data.parts;
       sections = data.sections;
-      activeSection = sections[0] || 'A';
+      warehouse = buildWarehouse(drawers);
+      activeWallId = warehouse.walls[0].id;
+      activeSection = warehouse.walls[0].sections[0] || 'A';
       els.status.textContent = formatCountLabel(data.meta.partCount, data.meta.drawerCount);
       els.mapNote.textContent =
-        'Schematická mapa podle označení šuplíků (A1, E3…). Nejde o fyzický půdorys skladu.';
+        'Průčelí A–G a H–M dle videa; N–U dle evidence. Sloupce zleva, čísla shora dolů — ne přesný půdorys.';
 
       const params = new URLSearchParams(window.location.search);
       const initial = params.get('q');

@@ -9,7 +9,7 @@ Rychlý skladový radar pro hledání dílů, sken čárových kódů a schemati
 
 - Hledání bez diakritiky podle názvu, EAN/kódu i šuplíku
 - Kamerové skenování čárových kódů (EAN-13/8, Code 128 a běžné 1D) s ohledem na iPhone/Safari
-- Schematická mapa sekcí (3D / 2D) se zvýrazněním nalezeného šuplíku
+- Regálové průčelí ve sloupcích (A1 nad A2…): bloky A–G a H–M dle videa, N–U dle evidence; 3D/2D
 - Mobilní spodní lišta: Hledat · Skenovat · Mapa
 - Lokálně v prohlížeči: historie, oblíbené, režim mapy, odkaz `?q=`
 

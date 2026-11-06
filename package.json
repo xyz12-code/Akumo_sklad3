@@ -5,6 +5,6 @@
   "description": "AKUMO SKLAD 3 – hledání dílů a schematická mapa šuplíků",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "check:js": "node --check js/normalize.js && node --check js/search.js && node --check js/storage.js && node --check js/data.js && node --check js/map.js && node --check js/scanner.js && node --check js/app.js"
+    "check:js": "node --check js/normalize.js && node --check js/search.js && node --check js/storage.js && node --check js/data.js && node --check js/warehouse.js && node --check js/map.js && node --check js/scanner.js && node --check js/app.js"
   }
 }

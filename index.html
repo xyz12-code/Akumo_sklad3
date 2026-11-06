@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="AKUMO RADAR">
   <title>AKUMO RADAR</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/app.css?v=20261106-radar2">
+  <link rel="stylesheet" href="css/app.css?v=20261106-warehouse1">
 </head>
 <body>
   <a class="skip-link" href="#search-input">Přeskočit na hledání</a>
@@ -64,21 +64,22 @@
 
       <section class="panel panel-map" id="map-panel" aria-labelledby="map-title">
         <div class="panel-head">
-          <h2 id="map-title">Mapa šuplíků</h2>
-          <div class="mode-switch" role="group" aria-label="Režim mapy">
+          <h2 id="map-title">Regálové průčelí</h2>
+          <div class="mode-switch" role="group" aria-label="Režim zobrazení">
             <button type="button" class="mode-btn" id="mode-iso" aria-pressed="true">3D</button>
             <button type="button" class="mode-btn" id="mode-flat" aria-pressed="false">2D</button>
           </div>
         </div>
-        <p id="map-note" class="map-note">Schematická mapa podle označení šuplíků — ne fyzický půdorys.</p>
+        <p id="map-note" class="map-note">Schéma průčelí dle videa (A–M) a evidence (N–U) — ne přesný půdorys.</p>
+        <nav id="wall-tabs" class="wall-tabs" aria-label="Blok regálu"></nav>
         <div class="map-toolbar">
-          <strong id="section-label">Sekce —</strong>
-          <span class="muted map-hint">Zeleně = nalezené</span>
+          <strong id="section-label">Regál —</strong>
+          <span class="muted map-hint">Sloupce A→ · řady shora dolů · zeleně = cíl</span>
         </div>
-        <nav id="section-nav" class="section-nav" aria-label="Sekce regálu"></nav>
-        <div class="scene" aria-label="Schematická mapa šuplíků">
+        <nav id="section-nav" class="section-nav" aria-label="Sekce ve stěně"></nav>
+        <div class="scene facade-scene" aria-label="Schematické regálové průčelí">
           <div class="scene-label"><span>AKUMO RADAR</span><span>SCHÉMA</span></div>
-          <div id="drawer-grid" class="drawer-grid is-iso" aria-label="Šuplíky zvolené sekce"></div>
+          <div id="drawer-grid" class="drawer-grid rack-facade is-iso" aria-label="Průčelí zvoleného regálu"></div>
         </div>
         <div id="drawer-detail" class="drawer-detail" aria-live="polite">
           <p class="muted">Vyber šuplík nebo vyhledej díl.</p>
@@ -127,12 +128,13 @@
     .visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
 
-  <script src="js/normalize.js?v=20261106-radar2"></script>
-  <script src="js/search.js?v=20261106-radar2"></script>
-  <script src="js/storage.js?v=20261106-radar2"></script>
-  <script src="js/data.js?v=20261106-radar2"></script>
-  <script src="js/map.js?v=20261106-radar2"></script>
-  <script src="js/scanner.js?v=20261106-radar2"></script>
-  <script src="js/app.js?v=20261106-radar2"></script>
+  <script src="js/normalize.js?v=20261106-warehouse1"></script>
+  <script src="js/search.js?v=20261106-warehouse1"></script>
+  <script src="js/storage.js?v=20261106-warehouse1"></script>
+  <script src="js/data.js?v=20261106-warehouse1"></script>
+  <script src="js/warehouse.js?v=20261106-warehouse1"></script>
+  <script src="js/map.js?v=20261106-warehouse1"></script>
+  <script src="js/scanner.js?v=20261106-warehouse1"></script>
+  <script src="js/app.js?v=20261106-warehouse1"></script>
 </body>
 </html>
