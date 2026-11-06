@@ -104,7 +104,7 @@ test('markup/css include façade walls and keep scanner gesture API', () => {
   const css = fs.readFileSync(path.join(root, 'css/app.css'), 'utf8');
   const app = fs.readFileSync(path.join(root, 'js/app.js'), 'utf8');
   assert.match(html, /id="wall-tabs"/);
-  assert.match(html, /history1|warehouse1/);
+  assert.match(html, /release1/);
   assert.match(html, /js\/warehouse\.js/);
   assert.match(css, /\.rack-columns/);
   assert.match(css, /\.bin-label/);

@@ -26,9 +26,11 @@ test('mobile dock + scanner modal markup present', () => {
   assert.match(html, /id="mobile-dock"/);
   assert.match(html, /id="dock-scan"/);
   assert.match(html, /<(dialog|div)[^>]*id="scanner-modal"/);
-  assert.match(html, /20261106-history1/);
+  assert.match(html, /20261106-release1/);
   assert.match(html, /js\/history-log\.js/);
   assert.match(html, /js\/supabase-config\.js/);
+  assert.match(html, /class="status-meta"/);
+  assert.doesNotMatch(html, /brand-mark|Najdi díl\. Zaměř šuplík/);
   assert.match(html, /id="scanner-video"[^>]*playsinline/i);
   assert.match(html, /open-scanner/);
   assert.match(html, /vendor\/zxing\/zxing-browser\.min\.js|scanner\.js/);
