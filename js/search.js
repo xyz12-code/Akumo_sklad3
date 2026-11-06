@@ -7,7 +7,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (normApi) {
   'use strict';
 
-  const { normalize, compact, sectionOf, isDrawerCode } = normApi;
+  const { normalize, compact, sectionOf, isDrawerCode, compareDrawerCodes } = normApi;
 
   function rankPart(item, term, words) {
     const name = normalize(item.name);
@@ -82,7 +82,7 @@
     const matchedDrawers = drawers
       .filter((d) => d.status !== 'NEŘEŠIT')
       .filter((d) => words.every((w) => normalize(d.code + ' ' + d.name).includes(w)))
-      .sort((a, b) => a.code.localeCompare(b.code, 'cs'));
+      .sort((a, b) => compareDrawerCodes(a.code, b.code));
 
     const scored = parts
       .map((item) => ({ item, score: rankPart(item, term, words) }))

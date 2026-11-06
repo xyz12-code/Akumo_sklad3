@@ -56,7 +56,7 @@ test('no real XYZ coordinates invented in source JSON', () => {
 
 test('relative asset paths used in index.html', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  assert.match(html, /href="css\/app\.css"/);
-  assert.match(html, /src="js\/app\.js"/);
+  assert.match(html, /href="css\/app\.css(\?v=[^"]+)?"/);
+  assert.match(html, /src="js\/app\.js(\?v=[^"]+)?"/);
   assert.equal(/https?:\/\/xyz12-code\.github\.io\//.test(html), false);
 });

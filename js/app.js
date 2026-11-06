@@ -3,7 +3,7 @@
 
   const { loadAll } = AkumoData;
   const { search } = AkumoSearch;
-  const { sectionOf } = AkumoNormalize;
+  const { sectionOf, formatCountLabel } = AkumoNormalize;
   const { getHistory, rememberQuery, getFavorites, toggleFavorite, isFavorite } = AkumoStorage;
   const { renderSectionNav, renderRack, pulseDrawer, reducedMotion } = AkumoMap;
 
@@ -37,6 +37,7 @@
   let matched = { type: 'empty', drawers: [], parts: [], focusDrawer: null };
   let activeSection = 'A';
   let selectedDrawer = null;
+  let selectedPartCode = null;
   let mapMode = localStorage.getItem('akumoSklad3.mapMode') || 'iso';
   let resultCursor = -1;
 
@@ -101,8 +102,13 @@
 
   function selectDrawer(code, fromMap) {
     selectedDrawer = code;
+    if (selectedPartCode) {
+      const part = parts.find((item) => item.code === selectedPartCode);
+      if (!part || part.drawer !== code) selectedPartCode = null;
+    }
     const section = sectionOf(code);
     if (section) activeSection = section;
+    updateResultCount();
     paintMap();
     renderDetail(code);
     if (!fromMap) {
@@ -191,6 +197,7 @@
     query = els.search.value.trim();
     matched = search({ query, drawers, parts, sections });
     resultCursor = -1;
+    selectedPartCode = null;
     els.clear.hidden = !query;
 
     if (remember && query) {
@@ -215,11 +222,31 @@
       els.detail.innerHTML = '<p class="muted">Vyber šuplík na mapě nebo vyhledej díl.</p>';
     }
 
-    const partN = matched.parts.length;
-    const drawerN = matched.drawers.length;
-    if (!query) els.resultCount.textContent = 'Zadej název, kód nebo šuplík';
-    else if (matched.type === 'none') els.resultCount.textContent = 'Nic nenalezeno';
-    else els.resultCount.textContent = partN + ' dílů · ' + drawerN + ' šuplíků';
+    updateResultCount();
+  }
+
+  function updateResultCount() {
+    if (!query) {
+      els.resultCount.textContent = 'Zadej název, kód nebo šuplík';
+      return;
+    }
+    if (matched.type === 'none') {
+      els.resultCount.textContent = 'Nic nenalezeno';
+      return;
+    }
+    const found = 'Nalezeno: ' + formatCountLabel(matched.parts.length, matched.drawers.length);
+    if (selectedPartCode) {
+      const part = matched.parts.find((item) => item.code === selectedPartCode);
+      if (part) {
+        els.resultCount.textContent = found + ' · vybráno: ' + part.drawer;
+        return;
+      }
+    }
+    if (selectedDrawer && matched.drawers.some((d) => d.code === selectedDrawer)) {
+      els.resultCount.textContent = found + ' · vybráno: ' + selectedDrawer;
+      return;
+    }
+    els.resultCount.textContent = found;
   }
 
   function syncShareLink(value) {
@@ -308,7 +335,7 @@
       matched.parts.slice(0, 80).forEach((item, index) => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'result-card';
+        btn.className = 'result-card' + (selectedPartCode === item.code ? ' is-selected' : '');
         btn.dataset.index = String(index);
         btn.innerHTML =
           '<span class="result-drawer">' +
@@ -325,15 +352,14 @@
           '</span></span>' +
           '<span class="result-go" aria-hidden="true">→</span>';
         btn.addEventListener('click', () => {
-          els.search.value = item.name;
-          query = item.name;
-          matched = search({ query, drawers, parts, sections });
+          selectedPartCode = item.code;
           selectedDrawer = item.drawer;
           activeSection = sectionOf(item.drawer) || activeSection;
-          rememberQuery(item.name);
+          rememberQuery(query || item.name);
           renderHistory();
           renderQuick();
           renderResults();
+          updateResultCount();
           paintMap();
           selectDrawer(item.drawer, false);
         });
@@ -468,7 +494,7 @@
       meta = data.meta;
       activeSection = sections[0] || 'A';
       els.status.textContent =
-        meta.partCount + ' dílů · ' + meta.drawerCount + ' šuplíků · ' + meta.sectionCount + ' sekcí';
+        formatCountLabel(meta.partCount, meta.drawerCount) + ' · ' + meta.sectionCount + ' sekcí';
       els.stats.textContent = meta.sourceNote;
       els.mapNote.textContent =
         'Schematická mapa podle označení šuplíků (např. A1, E3). Přesné 3D souřadnice v datech nejsou — rozložení v sekci je přehledové, ne fyzický půdorys skladu.';

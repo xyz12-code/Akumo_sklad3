@@ -7,7 +7,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (normApi) {
   'use strict';
 
-  const { sectionOf } = normApi;
+  const { sectionOf, compareDrawerCodes } = normApi;
   const PART_FILES = [
     'beta-data/part1.json',
     'beta-data/part2.json',
@@ -29,7 +29,7 @@
         section: sectionOf(row[0]),
       }))
       .filter((item) => item.code && item.section)
-      .sort((a, b) => a.code.localeCompare(b.code, 'cs'));
+      .sort((a, b) => compareDrawerCodes(a.code, b.code));
   }
 
   function parseParts(rows) {

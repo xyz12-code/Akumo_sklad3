@@ -43,7 +43,15 @@
     gridEl.classList.toggle('is-iso', mode === 'iso');
     gridEl.classList.toggle('is-flat', mode === 'flat');
 
-    const list = drawers.filter((d) => d.section === section);
+    const list = drawers
+      .filter((d) => d.section === section)
+      .slice()
+      .sort((a, b) => {
+        if (typeof AkumoNormalize !== 'undefined' && AkumoNormalize.compareDrawerCodes) {
+          return AkumoNormalize.compareDrawerCodes(a.code, b.code);
+        }
+        return String(a.code).localeCompare(String(b.code), 'cs', { numeric: true });
+      });
     const frag = document.createDocumentFragment();
 
     list.forEach((item) => {
