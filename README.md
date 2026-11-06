@@ -15,7 +15,9 @@ Rychlý skladový radar pro hledání dílů, sken čárových kódů a schemati
 
 ## Data a limity (technické poznámky)
 
-Data pocházejí z veřejného inventárního exportu [Akumo_sklad2](https://github.com/xyz12-code/Akumo_sklad2):
+Aplikace nese **vlastní lokální kopie** inventárních JSON (`supliky.json`, `beta-data/…`) přímo v tomto repozitáři. Za běhu **nečte** remote URL původního `Akumo_sklad2` (ten je nyní private) ani jeho Pages.
+
+Snapshot byl pořízen z dřívějšího veřejného exportu SKLAD 2:
 
 | Soubor | Obsah |
 | --- | --- |
@@ -58,4 +60,4 @@ Mockované testy skeneru **nejsou** náhradou za fyzické skenování na iPhonu.
 - `main` — výchozí README
 - `feature/akumo-v3` — aplikace (GitHub Pages z této větve)
 
-Původní `Akumo_sklad2` se nemění.
+Původní `Akumo_sklad2` se v tomto workstreamu nemění (viditelnost řeší vlastník zvlášť).

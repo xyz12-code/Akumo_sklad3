@@ -17,7 +17,8 @@ test('product renamed to AKUMO RADAR in html/readme; old footer paragraphs gone'
   assert.doesNotMatch(html, /Inspirace barevností/);
   assert.doesNotMatch(html, /id="stats-line"/);
   assert.match(readme, /AKUMO RADAR/);
-  assert.match(readme, /inventárního exportu/);
+  assert.match(readme, /lokální kopie|inventárních JSON/);
+  assert.match(readme, /nečte/);
 });
 
 test('mobile dock + scanner modal markup present', () => {
