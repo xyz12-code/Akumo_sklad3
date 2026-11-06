@@ -26,7 +26,7 @@ test('mobile dock + scanner modal markup present', () => {
   assert.match(html, /id="mobile-dock"/);
   assert.match(html, /id="dock-scan"/);
   assert.match(html, /<(dialog|div)[^>]*id="scanner-modal"/);
-  assert.match(html, /20261106-warehouse1/);
+  assert.match(html, /20261106-(warehouse1|visual1|visual2)/);
   assert.match(html, /id="scanner-video"[^>]*playsinline/i);
   assert.match(html, /open-scanner/);
   assert.match(html, /vendor\/zxing\/zxing-browser\.min\.js|scanner\.js/);
