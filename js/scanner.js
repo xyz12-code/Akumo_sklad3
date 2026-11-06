@@ -6,6 +6,8 @@
 
   const NATIVE_FORMATS = ['ean_13', 'ean_8', 'code_128', 'upc_a', 'code_39', 'qr_code'];
   const REQUIRED_1D = ['ean_13', 'ean_8', 'code_128'];
+  // Scanner is an experimental feature: every status shown to the user is marked as beta.
+  const SCANNER_BETA_PREFIX = 'Skener (beta): ';
 
   const CAMERA_CONSTRAINTS = {
     audio: false,
@@ -66,7 +68,7 @@
 
     function setStatus(text, isError) {
       if (!statusEl) return;
-      statusEl.textContent = text;
+      statusEl.textContent = SCANNER_BETA_PREFIX + text;
       statusEl.classList.toggle('is-error', !!isError);
     }
 
@@ -465,5 +467,6 @@
     NATIVE_FORMATS: NATIVE_FORMATS,
     REQUIRED_1D: REQUIRED_1D,
     CAMERA_CONSTRAINTS: CAMERA_CONSTRAINTS,
+    SCANNER_BETA_PREFIX: SCANNER_BETA_PREFIX,
   };
 });
