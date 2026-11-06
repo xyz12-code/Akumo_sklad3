@@ -2,8 +2,8 @@
   'use strict';
 
   const { loadAll } = AkumoData;
-  const { search } = AkumoSearch;
-  const { sectionOf, formatCountLabel, formatItemsLabel } = AkumoNormalize;
+  const { search, summarizeMatch } = AkumoSearch;
+  const { sectionOf, formatCountLabel, czechPlural } = AkumoNormalize;
   const { getHistory, rememberQuery, getFavorites, toggleFavorite, isFavorite } = AkumoStorage;
   const { buildWarehouse, routeToCode } = AkumoWarehouse;
   const { renderWallTabs, renderSectionNav, renderRack, pulseDrawer, panToDrawer, reducedMotion } = AkumoMap;
@@ -50,6 +50,8 @@
     resultsPanel: document.getElementById('results-panel'),
     mapPanel: document.getElementById('map-panel'),
     layout: document.getElementById('main-layout'),
+    tabResults: document.getElementById('tab-results'),
+    tabMap: document.getElementById('tab-map'),
   };
 
   let drawers = [];
@@ -110,6 +112,13 @@
     document.body.classList.toggle('show-results', which !== 'map');
     if (els.dockMap) els.dockMap.classList.toggle('is-active', which === 'map');
     if (els.dockSearch) els.dockSearch.classList.toggle('is-active', which !== 'map');
+    // Mobile view tabs (hidden on desktop where both panes are visible).
+    [[els.tabResults, which !== 'map'], [els.tabMap, which === 'map']].forEach(([tab, on]) => {
+      if (!tab) return;
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
+      tab.classList.toggle('is-active', on);
+    });
   }
 
   function setMapMode(mode) {
@@ -293,7 +302,10 @@
       els.resultCount.textContent = 'Nic nenalezeno';
       return;
     }
-    const found = 'Nalezeno: ' + formatCountLabel(matched.parts.length, matched.drawers.length);
+    // Count over the full current result: unique drawers of all matched parts
+    // plus drawers matched by their own label (selection does not narrow it).
+    const summary = summarizeMatch(matched);
+    const found = 'Nalezeno: ' + formatCountLabel(summary.partCount, summary.drawerCount);
     if (selectedPartCode) {
       const part = matched.parts.find((item) => item.code === selectedPartCode);
       if (part) {
@@ -301,7 +313,7 @@
         return;
       }
     }
-    if (selectedDrawer && matched.drawers.some((d) => d.code === selectedDrawer)) {
+    if (selectedDrawer && summary.drawerCodes.has(String(selectedDrawer).toUpperCase())) {
       els.resultCount.textContent = found + ' · vybráno: ' + selectedDrawer;
       return;
     }
@@ -380,7 +392,7 @@
 
     if (matched.type === 'none') {
       els.quick.innerHTML =
-        '<div class="quick-card is-empty"><p class="eyebrow">Výsledek</p><h2>Nic jsem nenašel</h2><p>Zkus kratší slovo, EAN nebo šuplík (např. E3).</p></div>';
+        '<div class="quick-card is-empty"><div class="quick-text"><h2>Nic jsem nenašel</h2><p class="quick-meta">Zkus kratší slovo, EAN nebo šuplík (např. E3).</p></div></div>';
       return;
     }
 
@@ -399,34 +411,34 @@
                 ? matched.drawers[0].name
                 : 'Nalezeno';
 
+    const pill = focus && focus !== 'OSTATNÍ' ? focus : focus === 'OSTATNÍ' ? 'MIMO' : '—';
+    const summary = focusParts.length
+      ? focusParts.length + ' ' + czechPlural(focusParts.length, 'díl', 'díly', 'dílů')
+      : matched.drawers[0]
+        ? matched.drawers[0].name
+        : '';
+
+    // Compact locator: one row "A3 · Šuplík A3 · 2 díly" + small map action.
     const card = document.createElement('div');
     card.className = 'quick-card';
     card.innerHTML =
-      '<p class="eyebrow">Kam jít</p>' +
-      '<div class="quick-row">' +
-      '<div><span class="drawer-pill">' +
-      escapeHtml(focus && focus !== 'OSTATNÍ' ? focus : focus === 'OSTATNÍ' ? 'MIMO' : '—') +
-      '</span><h2>' +
+      '<span class="drawer-pill">' +
+      escapeHtml(pill) +
+      '</span>' +
+      '<div class="quick-text"><h2>' +
       escapeHtml(title) +
-      '</h2><p class="muted">' +
-      (focusParts.length
-        ? formatItemsLabel(focusParts.length) + ' v tomto šuplíku z aktuálního výsledku'
-        : matched.drawers[0]
-          ? escapeHtml(matched.drawers[0].name)
-          : '') +
-      '</p></div></div>';
+      '</h2>' +
+      (summary ? '<p class="quick-meta">' + escapeHtml(summary) + '</p>' : '') +
+      '</div>';
 
-    const actions = document.createElement('div');
-    actions.className = 'quick-actions';
     if (focus && focus !== 'OSTATNÍ') {
       const go = document.createElement('button');
       go.type = 'button';
-      go.className = 'btn btn-primary btn-xl';
-      go.textContent = 'Ukaž šuplík na mapě';
+      go.className = 'btn btn-link quick-go';
+      go.textContent = 'Ukázat na mapě';
       go.addEventListener('click', () => selectDrawer(focus, false));
-      actions.append(go);
+      card.append(go);
     }
-    card.append(actions);
     els.quick.append(card);
   }
 
@@ -595,6 +607,19 @@
       showView('map');
       const top = els.mapPanel.getBoundingClientRect().top + window.scrollY - 8;
       window.scrollTo({ top: Math.max(0, top), behavior: reducedMotion() ? 'auto' : 'smooth' });
+    });
+    els.tabResults.addEventListener('click', () => showView('results'));
+    els.tabMap.addEventListener('click', () => showView('map'));
+    [els.tabResults, els.tabMap].forEach((tab) => {
+      tab.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight' && event.key !== 'Home' && event.key !== 'End') return;
+        event.preventDefault();
+        event.stopPropagation();
+        const next =
+          event.key === 'Home' ? els.tabResults : event.key === 'End' ? els.tabMap : tab === els.tabResults ? els.tabMap : els.tabResults;
+        showView(next === els.tabMap ? 'map' : 'results');
+        next.focus();
+      });
     });
     els.backResults.addEventListener('click', () => {
       showView('results');
