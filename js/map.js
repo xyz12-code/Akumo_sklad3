@@ -35,14 +35,7 @@
       btn.className = 'wall-tab' + (wall.id === activeWallId ? ' is-active' : '');
       btn.setAttribute('aria-pressed', wall.id === activeWallId ? 'true' : 'false');
       btn.dataset.wall = wall.id;
-      btn.innerHTML =
-        '<span class="wall-tab-title">' +
-        wall.title +
-        '</span><span class="wall-tab-sub">' +
-        wall.subtitle +
-        ' · ' +
-        wall.drawerCount +
-        '</span>';
+      btn.innerHTML = '<span class="wall-tab-title">' + wall.title + '</span>';
       btn.addEventListener('click', () => onSelect(wall.id));
       frag.append(btn);
     });

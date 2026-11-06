@@ -641,7 +641,7 @@
       activeSection = warehouse.walls[0].sections[0] || 'A';
       els.status.textContent = formatCountLabel(data.meta.partCount, data.meta.drawerCount);
       els.mapNote.textContent =
-        'Průčelí A–G a H–M dle videa; N–U dle evidence. Sloupce zleva, čísla shora dolů — ne přesný půdorys.';
+        'Sloupce zleva, čísla shora dolů – orientační pohled.';
 
       const params = new URLSearchParams(window.location.search);
       const initial = params.get('q');
