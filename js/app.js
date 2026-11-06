@@ -8,6 +8,14 @@
   const { buildWarehouse, routeToCode } = AkumoWarehouse;
   const { renderWallTabs, renderSectionNav, renderRack, pulseDrawer, panToDrawer, reducedMotion } = AkumoMap;
   const { createScannerController, createZXingLoader } = AkumoScanner;
+  const historyLogger =
+    typeof AkumoHistoryLog !== 'undefined' && typeof AkumoSupabaseConfig !== 'undefined'
+      ? AkumoHistoryLog.createHistoryLogger({
+          url: AkumoSupabaseConfig.url,
+          publishableKey: AkumoSupabaseConfig.publishableKey,
+          table: AkumoSupabaseConfig.historyTable,
+        })
+      : null;
 
   const els = {
     status: document.getElementById('data-status'),
@@ -311,6 +319,14 @@
       rememberQuery(query);
       renderHistory();
       syncShareLink(query);
+      if (historyLogger) {
+        historyLogger.cancelPending();
+        historyLogger.logCompleted(query);
+      }
+    } else if (!remember && query && historyLogger) {
+      historyLogger.noteLiveInput(query);
+    } else if (!query && historyLogger) {
+      historyLogger.cancelPending();
     }
 
     renderQuick();

@@ -12,6 +12,7 @@ Rychlý skladový radar pro hledání dílů, sken čárových kódů a schemati
 - Regálové průčelí ve sloupcích (A1 nad A2…): bloky A–G a H–M dle videa, N–U dle evidence; 3D/2D
 - Mobilní spodní lišta: Hledat · Skenovat · Mapa
 - Lokálně v prohlížeči: historie, oblíbené, režim mapy, odkaz `?q=`
+- Volitelný anonymní zápis dokončených hledání do Supabase (jen text + čas serveru; bez veřejného čtení) — viz `docs/supabase/SEARCH_HISTORY.md`
 
 ## Data a limity (technické poznámky)
 
