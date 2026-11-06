@@ -7,7 +7,7 @@
   const { getHistory, rememberQuery, getFavorites, toggleFavorite, isFavorite } = AkumoStorage;
   const { buildWarehouse, routeToCode } = AkumoWarehouse;
   const { renderWallTabs, renderSectionNav, renderRack, pulseDrawer, panToDrawer, reducedMotion } = AkumoMap;
-  const { createScannerController, createZXingLoader } = AkumoScanner;
+  const { createScannerController, createZXingLoader, SCANNER_BETA_PREFIX } = AkumoScanner;
   const historyLogger =
     typeof AkumoHistoryLog !== 'undefined' && typeof AkumoSupabaseConfig !== 'undefined'
       ? AkumoHistoryLog.createHistoryLogger({
@@ -78,7 +78,7 @@
     loadZXing,
     onDetected: (raw) => {
       els.search.value = raw;
-      setFeedback('Načteno: ' + raw);
+      setFeedback(SCANNER_BETA_PREFIX + 'Načteno: ' + raw);
       showView('results');
       runSearch(true);
       els.search.focus();
@@ -437,7 +437,7 @@
       return;
     }
     if (matched.type === 'none') {
-      els.results.innerHTML = '<p class="muted">Žádná shoda. Uprav text nebo naskenuj kód.</p>';
+      els.results.innerHTML = '<p class="muted">Žádná shoda. Uprav text nebo naskenuj kód skenerem (beta).</p>';
       return;
     }
 
@@ -544,21 +544,21 @@
       prime = scanner.primeFromGesture();
     } catch (err) {
       console.error(err);
-      setFeedback('Kameru nelze spustit. Zadej kód ručně.', true);
+      setFeedback(SCANNER_BETA_PREFIX + 'Kameru nelze spustit. Zadej kód ručně.', true);
       return;
     }
     scanner.continueAfterPrime(prime).then(function (result) {
       if (!result || result.ok) return;
       if (result.reason === 'permission') {
-        setFeedback('Kamera je blokovaná v prohlížeči. Kód můžeš napsat ručně.', true);
+        setFeedback(SCANNER_BETA_PREFIX + 'Kamera je blokovaná v prohlížeči. Kód můžeš napsat ručně.', true);
       } else if (result.reason === 'cancelled') {
         /* user closed */
       } else if (result.reason === 'insecure-or-unsupported') {
-        setFeedback('Kamera na tomto zařízení/prohlížeči není dostupná. Napiš kód.', true);
+        setFeedback(SCANNER_BETA_PREFIX + 'Kamera na tomto zařízení/prohlížeči není dostupná. Napiš kód.', true);
       }
     }).catch(function (err) {
       console.error(err);
-      setFeedback('Chyba skeneru. Zkus znovu nebo napiš kód.', true);
+      setFeedback(SCANNER_BETA_PREFIX + 'Chyba skeneru. Zkus znovu nebo napiš kód.', true);
     });
   }
 
