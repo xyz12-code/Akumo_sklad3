@@ -1,43 +1,48 @@
-# AKUMO SKLAD 3
+# AKUMO RADAR
 
-Přehledný skladový navigátor pro hledání dílů a šuplíků. Navrženo tak, aby šlo ovládat i bez technických znalostí: velké hledání, čitelné výsledky a jedno výrazné tlačítko **Ukaž šuplík na mapě**.
+Rychlý skladový radar pro hledání dílů, sken čárových kódů a schematickou mapu šuplíků.
+
+**Produktový název:** AKUMO RADAR  
+**Repozitář:** `Akumo_sklad3` (nemění se)
 
 ## Co umí
 
-- Hledání **bez diakritiky**, podle názvu, čárového kódu i označení šuplíku (`E3`)
-- Rychlá odpověď „kam jít“ + seznam shod
-- **Schematická mapa** šuplíků po sekcích (A–U) v režimu **3D schéma** nebo **2D mřížka**
-- Zvýraznění nalezených šuplíků, otevření vybraného šuplíku, `prefers-reduced-motion`
-- Lokálně v prohlížeči: historie hledání, oblíbené šuplíky, režim mapy, sdílecí odkaz `?q=`
-- Klávesnice: `/` fokus, `Esc` vymazat, `↑/↓` výsledky
+- Hledání bez diakritiky podle názvu, EAN/kódu i šuplíku
+- Kamerové skenování čárových kódů (EAN-13/8, Code 128 a běžné 1D) s ohledem na iPhone/Safari
+- Schematická mapa sekcí (3D / 2D) se zvýrazněním nalezeného šuplíku
+- Mobilní spodní lišta: Hledat · Skenovat · Mapa
+- Lokálně v prohlížeči: historie, oblíbené, režim mapy, odkaz `?q=`
 
-## Co záměrně neumí / neříká
+## Data a limity (technické poznámky)
 
-- **Nejsou k dispozici skutečné 3D souřadnice** šuplíků ve skladu. Mapa je přehledové schéma podle kódů (`A1`, `E3`…), ne fyzický půdorys.
-- Stav množství je **údaj z inventurního exportu**, ne živý ERP/sklad.
-- Historie a oblíbené se **neukládají na server** — jen `localStorage` v daném prohlížeči.
-- Žádné falešné AI odhady dostupnosti.
-
-## Data
-
-Z veřejného repozitáře [Akumo_sklad2](https://github.com/xyz12-code/Akumo_sklad2):
+Data pocházejí z veřejného inventárního exportu [Akumo_sklad2](https://github.com/xyz12-code/Akumo_sklad2):
 
 | Soubor | Obsah |
 | --- | --- |
 | `supliky.json` | 277 šuplíků `[kód, název, volitelná poznámka]` |
 | `beta-data/part1.json` … `part4.json` | 209 dílů `[kód, název, kategorie, množství, šuplík, poznámka]` |
 
+- Množství je **inventurní údaj / evidence**, ne živý ERP sklad.
+- Mapa je **schéma podle označení** (`A1`, `E3`…), ne fyzický půdorys — v datech nejsou XYZ souřadnice.
+- Historie, oblíbené a režim mapy se ukládají jen v `localStorage` daného prohlížeče.
+- Barevnost je inspirovaná veřejným CSS [akumo.cz](https://www.akumo.cz/) (zelená `#7db828`).
+
 Kontrolní součty: `data/CHECKSUMS.sha256`.
 
-## Spuštění lokálně
+## Skenování
 
-Stačí libovolný statický server z kořene projektu, například:
+1. Uživatel klepne **Skenovat** (kamera se nežádá při načtení stránky).
+2. Pokud prohlížeč nabízí `BarcodeDetector` s 1D formáty (`ean_13`, `ean_8`, `code_128`), použije se nativní cesta.
+3. Jinak se **až po klepnutí** načte lokální vendored `@zxing/browser@0.1.5` z `vendor/zxing/` (Apache-2.0) — žádné CDN za běhu.
+4. Po úspěchu se kamera i dekódování zastaví, raw kód (včetně úvodních nul) jde do hledání.
+
+## Spuštění
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Otevři `http://127.0.0.1:8080/`.
+Otevři `http://127.0.0.1:8080/` (pro kameru v produkci HTTPS / GitHub Pages).
 
 ## Testy
 
@@ -46,15 +51,11 @@ npm test
 npm run check:js
 ```
 
-Testy ověřují normalizaci diakritiky, přesné kódy šuplíků, multiword search, barcode, prázdný výsledek, integritu JSON a relativní cesty pro GitHub Pages.
+Mockované testy skeneru **nejsou** náhradou za fyzické skenování na iPhonu.
 
-## Design
-
-Barevnost inspirovaná veřejným CSS [akumo.cz](https://www.akumo.cz/) (primární zelená `#7db828`, černá/bílá, jemná zlatá výstraha). Vlastní UI, ne generická šablona dashboardu.
-
-## Větve a nasazení
+## Větve
 
 - `main` — výchozí README
-- `feature/akumo-v3` — aplikace (GitHub Pages publikuje tuto větev z `/`)
+- `feature/akumo-v3` — aplikace (GitHub Pages z této větve)
 
 Původní `Akumo_sklad2` se nemění.

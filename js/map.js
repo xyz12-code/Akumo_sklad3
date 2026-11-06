@@ -103,8 +103,13 @@
     return Boolean(code);
   }
 
+  function cssEscape(value) {
+    if (typeof CSS !== 'undefined' && CSS.escape) return CSS.escape(value);
+    return String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+  }
+
   function pulseDrawer(gridEl, code) {
-    const btn = gridEl.querySelector('.drawer[data-code="' + CSS.escape(code) + '"]');
+    const btn = gridEl.querySelector('.drawer[data-code="' + cssEscape(code) + '"]');
     if (!btn) return;
     btn.classList.remove('is-pulse');
     void btn.offsetWidth;

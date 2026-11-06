@@ -15,7 +15,7 @@
     const code = normalize(item.code);
     const drawer = normalize(item.drawer);
     const reason = normalize(item.reason);
-    const blob = [name, category, code, drawer, reason].join(' ');
+    const blob = item._norm || [name, category, code, drawer, reason].join(' ');
     if (!words.every((word) => blob.includes(word))) return -1;
     if (code === term || compact(item.code) === compact(term)) return 100;
     if (drawer === term || compact(item.drawer) === compact(term)) return 90;
@@ -50,8 +50,9 @@
     }
 
     // Exact barcode
+    const packedCode = compact(raw);
     const barcodeHits = parts.filter(
-      (p) => compact(p.code) === compact(raw) || normalize(p.code) === term
+      (p) => (p._normCode || compact(p.code)) === packedCode || normalize(p.code) === term
     );
     if (barcodeHits.length) {
       return {

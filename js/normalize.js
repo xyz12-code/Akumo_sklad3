@@ -70,6 +70,11 @@
     );
   }
 
+  function formatItemsLabel(count) {
+    const n = Number(count) || 0;
+    return n + ' ' + czechPlural(n, 'položka', 'položky', 'položek');
+  }
+
   return {
     normalize,
     compact,
@@ -79,5 +84,6 @@
     compareDrawerCodes,
     czechPlural,
     formatCountLabel,
+    formatItemsLabel,
   };
 });

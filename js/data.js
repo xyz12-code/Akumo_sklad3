@@ -7,7 +7,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (normApi) {
   'use strict';
 
-  const { sectionOf, compareDrawerCodes } = normApi;
+  const { sectionOf, compareDrawerCodes, normalize } = normApi;
   const PART_FILES = [
     'beta-data/part1.json',
     'beta-data/part2.json',
@@ -36,14 +36,24 @@
     if (!Array.isArray(rows)) throw new Error('Neplatný formát inventury');
     return rows
       .filter((row) => Array.isArray(row) && row.length >= 6)
-      .map((row) => ({
-        code: String(row[0]).trim(),
-        name: String(row[1]).trim(),
-        category: String(row[2]).trim(),
-        quantity: String(row[3]).trim(),
-        drawer: String(row[4]).trim(),
-        reason: String(row[5] || '').trim(),
-      }))
+      .map((row) => {
+        const code = String(row[0]).trim();
+        const name = String(row[1]).trim();
+        const category = String(row[2]).trim();
+        const quantity = String(row[3]).trim();
+        const drawer = String(row[4]).trim();
+        const reason = String(row[5] || '').trim();
+        return {
+          code,
+          name,
+          category,
+          quantity,
+          drawer,
+          reason,
+          _norm: normalize([name, category, code, drawer, reason].join(' ')),
+          _normCode: normalize(code).replace(/\s+/g, ''),
+        };
+      })
       .filter((item) => item.code && item.name);
   }
 

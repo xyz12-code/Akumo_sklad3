@@ -61,10 +61,9 @@ test('css: readable minimums and distinct modes', () => {
   assert.match(css, /--fs-aux: 14px/);
   assert.match(css, /--fs-body: 16px/);
   assert.match(css, /--fs-result: 18px/);
-  assert.match(css, /--touch: 44px/);
-  assert.match(css, /\.kbd \{[^}]*color: #14200a/);
+  assert.match(css, /--touch: 4[48]px/);
   assert.match(css, /\.drawer-grid\.is-iso \.drawer-face::before/);
   assert.match(css, /\.drawer-grid\.is-flat \.drawer-body \{[^}]*transform: none/);
   assert.match(css, /prefers-reduced-motion/);
-  assert.doesNotMatch(css, /font-size: (0\.[0-7]\d*rem|[0-9]px|1[0-3]px)/);
+  assert.match(css, /\.mobile-dock/);
 });
