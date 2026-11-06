@@ -19,7 +19,13 @@ test('visual polish keeps AKUMO palette and touch targets', () => {
   assert.match(css, /\.rack-scene\.is-iso/);
   assert.match(css, /\.rack-scene\.is-flat/);
   assert.match(css, /min-width:\s*1280px|width:\s*min\(1280px/);
-  assert.match(html, /css\/app\.css\?v=20261106-visual2/);
+  assert.match(html, /css\/app\.css\?v=20261106-visual3/);
+  assert.match(html, /<h1>AKUMO RADAR<\/h1>/);
+  assert.match(html, /id="data-status"/);
+  assert.match(html, /class="status-meta"/);
+  assert.doesNotMatch(html, /brand-mark|Najdi díl\. Zaměř šuplík/);
+  assert.doesNotMatch(css, /\.status-pill::before|\.brand-mark\s*\{/);
+  assert.match(css, /\.brand-text h1[\s\S]*border-bottom:\s*2px solid var\(--akumo-green\)/);
   assert.match(css, /\.panel-results[\s\S]*align-self:\s*start/);
   assert.match(css, /\.bin\.is-dim\s*\{\s*opacity:\s*1/);
   assert.match(css, /\.bin\.is-dim \.bin-label[\s\S]*opacity:\s*1/);
