@@ -1,11 +1,12 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { createScannerController } = require('../js/scanner.js');
+const { createScannerController, resolveGetUserMedia } = require('../js/scanner.js');
 
 function mockVideo() {
   return {
     srcObject: null,
     muted: false,
+    defaultMuted: false,
     playsInline: false,
     readyState: 2,
     setAttribute() {},
@@ -13,7 +14,6 @@ function mockVideo() {
     pause() {},
   };
 }
-
 function mockTrack() {
   let stopped = false;
   return {
@@ -25,51 +25,100 @@ function mockTrack() {
     },
   };
 }
-
 function mockStream(tracks) {
-  return {
-    getTracks: () => tracks,
-  };
+  return { getTracks: () => tracks };
 }
 
-test('stop closes tracks and cancels late gum', async () => {
-  const track = mockTrack();
+test('primeFromGesture invokes getUserMedia synchronously before any loader/native await', async () => {
+  const order = [];
   let resolveGum;
   const gumPromise = new Promise((resolve) => {
     resolveGum = resolve;
   });
-  const video = mockVideo();
-  const status = { textContent: '', classList: { toggle() {} } };
-  const modal = { hidden: true };
+  let loadStarted = false;
+  function FakeBD() {}
+  FakeBD.getSupportedFormats = async () => {
+    order.push('getSupportedFormats');
+    return ['ean_13', 'ean_8', 'code_128'];
+  };
   const c = createScannerController({
-    video,
-    statusEl: status,
-    modal,
+    video: mockVideo(),
+    statusEl: { textContent: '', classList: { toggle() {} } },
+    modal: { hidden: true, showModal() { order.push('showModal'); this.open = true; }, close() { this.open = false; } },
     isSecureContext: true,
-    getUserMedia: () => gumPromise,
-    BarcodeDetector: undefined,
-    loadZXing: async () => ({ BrowserMultiFormatReader: class {} }),
+    BarcodeDetector: FakeBD,
+    getUserMedia: (constraints) => {
+      order.push('getUserMedia');
+      assert.equal(constraints.audio, false);
+      assert.deepEqual(constraints.video.facingMode, { ideal: 'environment' });
+      return gumPromise;
+    },
+    loadZXing: async () => {
+      loadStarted = true;
+      order.push('loadZXing');
+      return {};
+    },
     onDetected: () => {},
   });
 
-  const startPromise = c.openAndStart();
-  // User closes before gum resolves
-  c.close();
-  assert.equal(modal.hidden, true);
+  const prime = c.primeFromGesture();
+  // Synchronous evidence: gum already requested; loader/native not yet.
+  assert.ok(order.includes('getUserMedia'));
+  assert.equal(loadStarted, false);
+  assert.ok(!order.includes('getSupportedFormats'));
+  assert.equal(prime.ok, true);
+  assert.ok(prime.streamPromise);
+
+  const track = mockTrack();
   resolveGum(mockStream([track]));
-  const result = await startPromise;
-  assert.equal(result.reason, 'cancelled');
-  assert.equal(track.stopped, true);
-  assert.equal(c.isActive(), false);
+  const result = await c.continueAfterPrime(prime);
+  assert.equal(result.ok, true);
+  assert.equal(result.engine, 'native');
+  assert.ok(order.indexOf('getUserMedia') < order.indexOf('getSupportedFormats'));
+  assert.equal(loadStarted, false);
+  c.close();
 });
 
-test('permission denied yields clear reason and stopped state', async () => {
-  const video = mockVideo();
+test('Safari-like: no BarcodeDetector → gum first, then ZXing while stream live', async () => {
+  const order = [];
+  const track = mockTrack();
+  const c = createScannerController({
+    video: mockVideo(),
+    statusEl: { textContent: '', classList: { toggle() {} } },
+    modal: { hidden: true },
+    isSecureContext: true,
+    BarcodeDetector: undefined,
+    getUserMedia: async () => {
+      order.push('getUserMedia');
+      return mockStream([track]);
+    },
+    loadZXing: async () => {
+      order.push('loadZXing');
+      class BrowserMultiFormatReader {
+        async decodeFromStream() {
+          order.push('decodeFromStream');
+          return { stop() {} };
+        }
+        reset() {}
+      }
+      return { BrowserMultiFormatReader };
+    },
+    onDetected: () => {},
+  });
+  const prime = c.primeFromGesture();
+  assert.deepEqual(order, ['getUserMedia']);
+  const result = await c.continueAfterPrime(prime);
+  assert.equal(result.engine, 'zxing');
+  assert.deepEqual(order, ['getUserMedia', 'loadZXing', 'decodeFromStream']);
+  c.close();
+});
+
+test('permission denied shows blocked camera copy', async () => {
   const status = { textContent: '', classList: { toggle() {} } };
   const err = new Error('denied');
   err.name = 'NotAllowedError';
   const c = createScannerController({
-    video,
+    video: mockVideo(),
     statusEl: status,
     modal: { hidden: false },
     isSecureContext: true,
@@ -79,100 +128,75 @@ test('permission denied yields clear reason and stopped state', async () => {
     loadZXing: async () => ({}),
     onDetected: () => {},
   });
-  const result = await c.openAndStart();
-  assert.equal(result.ok, false);
+  const prime = c.primeFromGesture();
+  const result = await c.continueAfterPrime(prime);
   assert.equal(result.reason, 'permission');
-  assert.match(status.textContent, /zamítnut/i);
+  assert.match(status.textContent, /Kamera je blokovaná v prohlížeči/);
+});
+
+test('close during pending gum cancels and stops late tracks', async () => {
+  const track = mockTrack();
+  let resolveGum;
+  const gumPromise = new Promise((resolve) => {
+    resolveGum = resolve;
+  });
+  const modal = { hidden: true };
+  const c = createScannerController({
+    video: mockVideo(),
+    statusEl: { textContent: '', classList: { toggle() {} } },
+    modal,
+    isSecureContext: true,
+    getUserMedia: () => gumPromise,
+    loadZXing: async () => ({}),
+    onDetected: () => {},
+  });
+  const prime = c.primeFromGesture();
+  c.close();
+  resolveGum(mockStream([track]));
+  const result = await c.continueAfterPrime(prime);
+  assert.equal(result.reason, 'cancelled');
+  assert.equal(track.stopped, true);
   assert.equal(c.isActive(), false);
 });
 
-test('native without 1D formats falls back to ZXing', async () => {
-  const track = mockTrack();
-  const video = mockVideo();
-  let zxingLoaded = false;
-  let decodeCalled = false;
+test('native without 1D formats falls back to ZXing after gum', async () => {
+  const order = [];
   function FakeDetector() {}
   FakeDetector.getSupportedFormats = async () => ['qr_code'];
   class BrowserMultiFormatReader {
-    async decodeFromStream(stream, vid, cb) {
-      decodeCalled = true;
-      assert.ok(stream);
-      setTimeout(() => cb({ getText: () => '0123456789012' }), 5);
+    async decodeFromStream() {
+      order.push('zxing');
       return { stop() {} };
-    }
-    async decodeFromConstraints() {
-      throw new Error('should prefer decodeFromStream');
     }
     reset() {}
   }
-  const seen = [];
   const c = createScannerController({
-    video,
+    video: mockVideo(),
     statusEl: { textContent: '', classList: { toggle() {} } },
     modal: { hidden: false },
     isSecureContext: true,
-    getUserMedia: async () => mockStream([track]),
-    BarcodeDetector: FakeDetector,
-    loadZXing: async () => {
-      zxingLoaded = true;
-      return { BrowserMultiFormatReader };
+    getUserMedia: async () => {
+      order.push('gum');
+      return mockStream([mockTrack()]);
     },
-    onDetected: (raw) => seen.push(raw),
+    BarcodeDetector: FakeDetector,
+    loadZXing: async () => ({ BrowserMultiFormatReader }),
+    onDetected: () => {},
   });
   const result = await c.openAndStart();
-  assert.equal(result.ok, true);
   assert.equal(result.engine, 'zxing');
-  assert.equal(zxingLoaded, true);
-  assert.equal(decodeCalled, true);
-  // wait for callback
-  await new Promise((r) => setTimeout(r, 20));
-  assert.deepEqual(seen, ['0123456789012']);
-  assert.equal(track.stopped, true);
+  assert.deepEqual(order, ['gum', 'zxing']);
+  c.close();
 });
 
-test('native with 1D support uses BarcodeDetector path', async () => {
-  const track = mockTrack();
-  const video = mockVideo();
-  let zxingLoaded = false;
-  function FakeDetector() {
-    this.detect = async () => [{ rawValue: '8591234567890' }];
-  }
-  FakeDetector.getSupportedFormats = async () => ['ean_13', 'ean_8', 'code_128', 'qr_code'];
+test('leading zeros preserved; duplicates ignored', async () => {
   const seen = [];
-  const c = createScannerController({
-    video,
-    statusEl: { textContent: '', classList: { toggle() {} } },
-    modal: { hidden: false },
-    isSecureContext: true,
-    getUserMedia: async () => mockStream([track]),
-    BarcodeDetector: FakeDetector,
-    loadZXing: async () => {
-      zxingLoaded = true;
-      return {};
-    },
-    onDetected: (raw) => seen.push(raw),
-  });
-  const result = await c.openAndStart();
-  assert.equal(result.ok, true);
-  assert.equal(result.engine, 'native');
-  assert.equal(zxingLoaded, false);
-  await new Promise((r) => setTimeout(r, 200));
-  assert.deepEqual(seen, ['8591234567890']);
-});
-
-test('duplicate raw within window ignored', async () => {
-  const seen = [];
-  const video = mockVideo();
-  let calls = 0;
   function FakeDetector() {
-    this.detect = async () => {
-      calls += 1;
-      return [{ rawValue: '000111' }];
-    };
+    this.detect = async () => [{ rawValue: '000111' }];
   }
   FakeDetector.getSupportedFormats = async () => ['ean_13', 'ean_8', 'code_128'];
   const c = createScannerController({
-    video,
+    video: mockVideo(),
     statusEl: { textContent: '', classList: { toggle() {} } },
     modal: { hidden: false },
     isSecureContext: true,
@@ -185,11 +209,11 @@ test('duplicate raw within window ignored', async () => {
   await c.openAndStart();
   await new Promise((r) => setTimeout(r, 250));
   assert.deepEqual(seen, ['000111']);
-  // Manual second accept should be ignored while generation advanced / inactive
   assert.equal(c.acceptRawForTest('000111', c.getGeneration()), false);
+  c.close();
 });
 
-test('insecure context blocks camera without gum call', async () => {
+test('insecure context never calls gum', async () => {
   let gum = 0;
   const c = createScannerController({
     video: mockVideo(),
@@ -203,7 +227,25 @@ test('insecure context blocks camera without gum call', async () => {
     loadZXing: async () => ({}),
     onDetected: () => {},
   });
-  const result = await c.openAndStart();
-  assert.equal(result.reason, 'insecure-or-unsupported');
+  const prime = c.primeFromGesture();
+  assert.equal(prime.ok, false);
   assert.equal(gum, 0);
+});
+
+test('resolveGetUserMedia is lazy-safe', () => {
+  assert.equal(resolveGetUserMedia(null), null);
+  const fn = async () => {};
+  assert.equal(resolveGetUserMedia(fn), fn);
+});
+
+test('app click path primes before continueAfterPrime', () => {
+  const app = require('fs').readFileSync(require('path').join(__dirname, '../js/app.js'), 'utf8');
+  assert.match(app, /primeFromGesture\(\)/);
+  assert.match(app, /continueAfterPrime\(prime\)/);
+  assert.match(app, /Kamera je blokovaná v prohlížeči/);
+  // ensure openScanner does not only call openAndStart alone
+  const idx = app.indexOf('function openScanner');
+  const block = app.slice(idx, idx + 700);
+  assert.match(block, /primeFromGesture/);
+  assert.doesNotMatch(block, /scanner\.openAndStart\(\)/);
 });

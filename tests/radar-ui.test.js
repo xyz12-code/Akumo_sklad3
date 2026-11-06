@@ -25,7 +25,8 @@ test('mobile dock + scanner modal markup present', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(html, /id="mobile-dock"/);
   assert.match(html, /id="dock-scan"/);
-  assert.match(html, /id="scanner-modal"/);
+  assert.match(html, /<(dialog|div)[^>]*id="scanner-modal"/);
+  assert.match(html, /20261106-radar2/);
   assert.match(html, /id="scanner-video"[^>]*playsinline/i);
   assert.match(html, /open-scanner/);
   assert.match(html, /vendor\/zxing\/zxing-browser\.min\.js|scanner\.js/);
@@ -39,6 +40,8 @@ test('css has dock safe-area, 16px input, mobile view switch, no tiny fonts', ()
   assert.match(css, /body\.show-map \.panel-results/);
   assert.match(css, /\.mobile-dock/);
   assert.match(css, /--touch: 48px/);
+  assert.match(css, /::-webkit-search-cancel-button/);
+  assert.match(css, /overflow-wrap: anywhere/);
 });
 
 test('položky plural and inventory wording helpers', () => {

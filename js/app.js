@@ -491,7 +491,28 @@
 
   function openScanner() {
     setFeedback('');
-    scanner.openAndStart();
+    // getUserMedia MUST start in this synchronous click turn (Safari gesture).
+    let prime;
+    try {
+      prime = scanner.primeFromGesture();
+    } catch (err) {
+      console.error(err);
+      setFeedback('Kameru nelze spustit. Zadej kód ručně.', true);
+      return;
+    }
+    scanner.continueAfterPrime(prime).then(function (result) {
+      if (!result || result.ok) return;
+      if (result.reason === 'permission') {
+        setFeedback('Kamera je blokovaná v prohlížeči. Kód můžeš napsat ručně.', true);
+      } else if (result.reason === 'cancelled') {
+        /* user closed */
+      } else if (result.reason === 'insecure-or-unsupported') {
+        setFeedback('Kamera na tomto zařízení/prohlížeči není dostupná. Napiš kód.', true);
+      }
+    }).catch(function (err) {
+      console.error(err);
+      setFeedback('Chyba skeneru. Zkus znovu nebo napiš kód.', true);
+    });
   }
 
   function bindEvents() {

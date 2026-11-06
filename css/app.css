@@ -70,7 +70,7 @@ a { color: var(--akumo-green-dark); }
   display: flex;
   gap: 10px;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 10px;
 }
 .brand {
@@ -110,10 +110,11 @@ a { color: var(--akumo-green-dark); }
   padding: 8px 12px;
   font-weight: 700;
   font-size: var(--fs-aux);
-  max-width: 46vw;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: min(52vw, 12.5rem);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  text-align: left;
 }
 .status-pill::before {
   content: "";
@@ -137,6 +138,12 @@ a { color: var(--akumo-green-dark); }
 }
 .search-form { display: grid; gap: 10px; }
 .search-wrap { position: relative; }
+#search-input::-webkit-search-cancel-button,
+#search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
 #search-input {
   width: 100%;
   min-height: var(--touch);
@@ -672,14 +679,28 @@ a { color: var(--akumo-green-dark); }
 /* ===== Scanner modal ===== */
 .scanner-modal {
   position: fixed;
-  inset: 0;
+  inset: auto 0 0 0;
   z-index: 50;
-  background: rgba(0, 0, 0, 0.72);
-  display: grid;
-  place-items: end center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+.scanner-modal::backdrop {
+  background: rgba(0, 0, 0, 0.72);
 }
 .scanner-modal[hidden] { display: none !important; }
+.scanner-modal:not([open]):not([hidden]) { display: none; }
+/* Fallback when implemented as non-dialog / open attr without ::backdrop */
+.scanner-modal[open] {
+  display: grid;
+  place-items: end center;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+}
 .scanner-dialog {
   width: min(560px, 100%);
   background: #111;
